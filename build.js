@@ -17,23 +17,39 @@ fs.ensureDirSync('dist/css');
 // Copy static assets
 fs.copySync('src/css', 'dist/css');
 
-// Read base template
+// Read templates
 const baseTemplate = fs.readFileSync('src/templates/base.html', 'utf8');
+const blogTemplate = fs.readFileSync('src/templates/blog.html', 'utf8');
 
 // Convert template string to HTML
 function applyTemplate(template, data) {
-    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => data[key] || '');
+    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+        if (key === 'date' && data[key]) {
+            // Format date as YYYY-MM-DD
+            return new Date(data[key]).toISOString().split('T')[0];
+        }
+        return data[key] || '';
+    }).replace(/\{\{#if (\w+)\}\}(.*?)\{\{\/if\}\}/g, (match, key, content) => {
+        return data[key] ? content : '';
+    });
 }
 
 // Process markdown files
-function processMarkdownFile(filePath, outputPath) {
+function processMarkdownFile(filePath, outputPath, isBlogPost = false) {
     const markdown = fs.readFileSync(filePath, 'utf8');
     const { attributes, body } = frontMatter(markdown);
     const html = marked.parse(body);
     
-    const pageHtml = applyTemplate(baseTemplate, {
+    // Add current date if not specified for blog posts
+    if (isBlogPost && !attributes.date) {
+        attributes.date = new Date().toISOString();
+    }
+
+    const pageHtml = applyTemplate(isBlogPost ? blogTemplate : baseTemplate, {
         title: attributes.title || 'Untitled',
-        content: html
+        content: html,
+        date: attributes.date,
+        author: attributes.author
     });
 
     // Ensure the output directory exists
@@ -46,22 +62,6 @@ fs.ensureDirSync('content');
 fs.ensureDirSync('content/blog');
 
 // Create sample content if it doesn't exist
-if (!fs.existsSync('content/index.md')) {
-    fs.writeFileSync('content/index.md', `---
-title: Welcome to Your Site
----
-# Welcome to Your Site
-
-This is your beautiful landing page. Edit this content in \`content/index.md\`.
-
-## Features
-
-- Simple and fast
-- Markdown support
-- Blog ready
-- Easy to customize`);
-}
-
 if (!fs.existsSync('content/about.md')) {
     fs.writeFileSync('content/about.md', `---
 title: About
@@ -80,15 +80,16 @@ title: FAQ
 Add your FAQs here.`);
 }
 
-// Process all markdown files
-function processDirectory(sourceDir, targetDir) {
+// Process all markdown files in content directory except index.md
+function processDirectory(sourceDir, targetDir, isBlogDir = false) {
     if (fs.existsSync(sourceDir)) {
         const files = fs.readdirSync(sourceDir);
         files.forEach(file => {
-            if (file.endsWith('.md')) {
+            // Skip index.md as we're handling index.html directly
+            if (file.endsWith('.md') && file !== 'index.md') {
                 const inputPath = path.join(sourceDir, file);
                 const outputPath = path.join(targetDir, file.replace('.md', '.html'));
-                processMarkdownFile(inputPath, outputPath);
+                processMarkdownFile(inputPath, outputPath, isBlogDir);
             }
         });
     }
@@ -96,8 +97,8 @@ function processDirectory(sourceDir, targetDir) {
 
 // Process main pages
 processDirectory('content', 'dist');
-// Process blog posts
-processDirectory('content/blog', 'dist/blog');
+// Process blog posts with blog template
+processDirectory('content/blog', 'dist/blog', true);
 
 // Generate blog index page
 const blogDir = 'content/blog';
@@ -124,6 +125,14 @@ ${blogFiles.map(post => `- [${post.title}](/blog/${post.slug}) - ${post.date}`).
 
     fs.writeFileSync('content/blog/index.md', blogIndexContent);
     processMarkdownFile('content/blog/index.md', 'dist/blog/index.html');
+}
+
+// Ensure index.html exists in dist
+if (!fs.existsSync('dist/index.html')) {
+    // Copy from src if it exists, otherwise create default
+    if (fs.existsSync('src/index.html')) {
+        fs.copySync('src/index.html', 'dist/index.html');
+    }
 }
 
 console.log('Build complete! Run npm run serve to view your site.'); 
