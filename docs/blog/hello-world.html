@@ -4,7 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hello World - First Blog Post - Your Site Blog</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <script>
+        // Handle base URL for GitHub Pages
+        const baseUrl = window.location.pathname.includes('/byoa-static-site') ? '/byoa-static-site' : '';
+        document.addEventListener('DOMContentLoaded', () => {
+            // Update navigation links
+            document.querySelectorAll('nav a').forEach(link => {
+                if (link.getAttribute('href').startsWith('/')) {
+                    link.href = baseUrl + link.getAttribute('href');
+                }
+            });
+            // Update CSS link
+            const cssLink = document.querySelector('link[rel="stylesheet"]');
+            cssLink.href = baseUrl + '/css/style.css';
+        });
+    </script>
 </head>
 <body>
     <header>
