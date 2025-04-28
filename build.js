@@ -10,12 +10,12 @@ marked.setOptions({
 });
 
 // Ensure build directories exist
-fs.ensureDirSync('dist');
-fs.ensureDirSync('dist/blog');
-fs.ensureDirSync('dist/css');
+fs.ensureDirSync('docs');
+fs.ensureDirSync('docs/blog');
+fs.ensureDirSync('docs/css');
 
 // Copy static assets
-fs.copySync('src/css', 'dist/css');
+fs.copySync('src/css', 'docs/css');
 
 // Read templates
 const baseTemplate = fs.readFileSync('src/templates/base.html', 'utf8');
@@ -96,9 +96,9 @@ function processDirectory(sourceDir, targetDir, isBlogDir = false) {
 }
 
 // Process main pages
-processDirectory('content', 'dist');
+processDirectory('content', 'docs');
 // Process blog posts with blog template
-processDirectory('content/blog', 'dist/blog', true);
+processDirectory('content/blog', 'docs/blog', true);
 
 // Generate blog index page
 const blogDir = 'content/blog';
@@ -124,15 +124,15 @@ title: Blog
 ${blogFiles.map(post => `- [${post.title}](/blog/${post.slug}) - ${post.date}`).join('\n')}`;
 
     fs.writeFileSync('content/blog/index.md', blogIndexContent);
-    processMarkdownFile('content/blog/index.md', 'dist/blog/index.html');
+    processMarkdownFile('content/blog/index.md', 'docs/blog/index.html');
 }
 
-// Ensure index.html exists in dist
-if (!fs.existsSync('dist/index.html')) {
+// Ensure index.html exists in docs
+if (!fs.existsSync('docs/index.html')) {
     // Copy from src if it exists, otherwise create default
     if (fs.existsSync('src/index.html')) {
-        fs.copySync('src/index.html', 'dist/index.html');
+        fs.copySync('src/index.html', 'docs/index.html');
     }
 }
 
-console.log('Build complete! Run npm run serve to view your site.'); 
+console.log('Build complete! Your site is ready in the docs directory.'); 
