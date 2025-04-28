@@ -99,4 +99,31 @@ processDirectory('content', 'dist');
 // Process blog posts
 processDirectory('content/blog', 'dist/blog');
 
+// Generate blog index page
+const blogDir = 'content/blog';
+if (fs.existsSync(blogDir)) {
+    const blogFiles = fs.readdirSync(blogDir)
+        .filter(file => file.endsWith('.md'))
+        .map(file => {
+            const content = fs.readFileSync(path.join(blogDir, file), 'utf8');
+            const { attributes } = frontMatter(content);
+            return {
+                title: attributes.title || file.replace('.md', ''),
+                date: attributes.date || new Date().toISOString().split('T')[0],
+                slug: file.replace('.md', '')
+            };
+        })
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const blogIndexContent = `---
+title: Blog
+---
+# Blog Posts
+
+${blogFiles.map(post => `- [${post.title}](/blog/${post.slug}) - ${post.date}`).join('\n')}`;
+
+    fs.writeFileSync('content/blog/index.md', blogIndexContent);
+    processMarkdownFile('content/blog/index.md', 'dist/blog/index.html');
+}
+
 console.log('Build complete! Run npm run serve to view your site.'); 
