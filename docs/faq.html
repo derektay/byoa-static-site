@@ -11,8 +11,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Update navigation links
             document.querySelectorAll('nav a').forEach(link => {
-                if (link.getAttribute('href').startsWith('/')) {
-                    link.href = baseUrl + link.getAttribute('href');
+                if (link.getAttribute('href').startsWith('./')) {
+                    link.href = baseUrl + link.getAttribute('href').substring(1);
                 }
             });
             // Update CSS link
@@ -24,12 +24,12 @@
 <body>
     <header>
         <nav>
-            <a href="/" class="logo">Your Site</a>
+            <a href="./index.html" class="logo">Your Site</a>
             <div class="nav-links">
-                <a href="/">Home</a>
-                <a href="/blog">Blog</a>
-                <a href="/about">About</a>
-                <a href="/faq">FAQ</a>
+                <a href="./index.html">Home</a>
+                <a href="./blog">Blog</a>
+                <a href="./about">About</a>
+                <a href="./faq">FAQ</a>
             </div>
         </nav>
     </header>
